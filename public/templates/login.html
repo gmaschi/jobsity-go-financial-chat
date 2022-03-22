@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+    <script type="text/javascript">
+        window.onload = function () {
+            let userLogin = document.getElementById("username-login");
+            let passwordLogin = document.getElementById("password-login");
+            let userSignup = document.getElementById("username-signup");
+            let passwordSignup = document.getElementById("password-signup");
+
+            // redirect to chat lobby
+            const redirectToChat = async () => {
+                let req = new XMLHttpRequest()
+                req.open("GET", "http://" + document.location.host + "/chat", true)
+                req.onreadystatechange = function (evt) {
+                    evt.preventDefault()
+                    if (req.readyState === 4) {
+                        if(req.status === 200) {
+                            window.history.pushState({},"", "/chat");
+                            document.write(req.responseText);
+                        } else {
+                            alert("error loading chat");
+                        }
+                    }
+                }
+                req.send()
+            }
+
+            // signup request
+            const signupRequest = async (username, password) => {
+                try {
+                    const signupInfo = await fetch(
+                        "http://" + document.location.host + "/users",
+                        {
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+                            method: "POST",
+                            body: JSON.stringify({
+                                username: username,
+                                password: password,
+                            }),
+                        }
+                    );
+
+                    const signUpDataResponse = await signupInfo.json();
+                    if (signUpDataResponse.error) {
+                        return signUpDataResponse.error
+                    }
+                    return ""
+                } catch (error) {
+                    return "could not sign user in"
+                }
+            };
+
+            document.getElementById("signup-form").onsubmit = async function (e) {
+                e.preventDefault()
+                let username = userSignup.value
+                let password = passwordSignup.value
+                if (!username || !password) {
+                    return false;
+                } else {
+                    try {
+                        const signUpErr = await signupRequest(username, password)
+                        if (signUpErr) {
+                            alert(signUpErr)
+                            return false
+                        }
+
+                        // authenticate after signup
+                        let token = await loginRequest(username, password)
+                        if (token) {
+                            await redirectToChat()
+                        }
+                    } catch (error) {
+                        console.log(error)
+                        return ""
+                    }
+                }
+                return false;
+            };
+
+            // login request
+            const loginRequest = async (username, password) => {
+                try {
+                    const loginInfo = await fetch(
+                        "http://" + document.location.host + "/users/login",
+                        {
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+                            method: "POST",
+                            body: JSON.stringify({
+                                username: username,
+                                password: password,
+                            }),
+                        }
+                    );
+
+                    const loginDataResponse = await loginInfo.json();
+                    if (loginDataResponse.error) {
+                        return loginDataResponse
+                    }
+
+                    let token = loginDataResponse["access_token"]
+                    return token
+                } catch (error) {
+                    alert(error)
+                    return ""
+                }
+            };
+            document.getElementById("login-form").onsubmit = async function (e) {
+                e.preventDefault()
+                let username = userLogin.value
+                let password = passwordLogin.value
+                if (!userLogin || !password) {
+                    return false;
+                } else {
+                    let res = await loginRequest(username, password)
+                    if (res.error) {
+                        alert(res.error)
+                        return
+                    }
+                       await redirectToChat()
+                }
+                return false;
+            };
+        };
+    </script>
+</head>
+<body>
+<div>
+    <h2>Login form</h2>
+    <form id="login-form">
+        <label for="username-login">Username
+            <input type="text" id="username-login" size="64" autofocus/>
+        </label>
+        <label for="password-login">Password
+            <input type="password" id="password-login" size="64" autofocus/>
+        </label>
+        <input type="submit" value="Login"/>
+    </form>
+</div>
+<div>
+    <h2>Sign Up form</h2>
+    <form id="signup-form">
+        <label for="username-signup">Username
+            <input type="text" id="username-signup" size="64" autofocus/>
+        </label>
+        <label for="password-signup">Password
+            <input type="password" id="password-signup" size="64" autofocus/>
+        </label>
+        <input type="submit" value="Sign Up"/>
+    </form>
+</div>
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ChatRoom</title>
+    <style>
+        html {
+            overflow: hidden;
+        }
+
+        body {
+            overflow: hidden;
+            padding: 0;
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+        }
+
+        #chat-window {
+            background: white;
+            margin: 0;
+            padding: 1em;
+            position: absolute;
+            top: 1em;
+            left: 1em;
+            right: 1em;
+            bottom: 5em;
+            overflow: auto;
+        }
+
+        #form {
+            padding: 0 1em 0 1em;
+            margin: 0;
+            position: absolute;
+            bottom: 1em;
+            left: 0px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        #message-box {
+            height: 2em;
+        }
+
+        #submit-button {
+            height: 2em;
+        }
+    </style>
+</head>
+<body>
+<div id="chat-window"></div>
+<form id="form">
+    <input type="text" id="message-box" size="64" autofocus/>
+    <input type="submit" id="submit-button" value="Send"/>
+</form>
+<script>
+    window.onload = function () {
+        let conn;
+        let messageBox = document.getElementById("message-box");
+        let chatWindow = document.getElementById("chat-window");
+
+        let maxNumberOfMessages = 50
+
+        function appendChatWindow(item) {
+            if (chatWindow.children.length >= maxNumberOfMessages) {
+                chatWindow.removeChild(chatWindow.firstChild)
+            }
+
+            chatWindow.appendChild(item);
+        }
+
+        document.getElementById("form").onsubmit = function () {
+            if (!conn) {
+                return false;
+            }
+            if (!messageBox.value) {
+                return false;
+            }
+            conn.send(messageBox.value);
+            messageBox.value = "";
+            return false;
+        };
+
+        if (window["WebSocket"]) {
+            const params = window.location.href.split("/");
+            const roomId = params[params.length - 1];
+            conn = new WebSocket("ws://" + document.location.host + "/chat/ws/" + roomId);
+
+            conn.onclose = function () {
+                let item = document.createElement("div");
+                item.innerHTML = "<b>Connection closed</b>";
+                appendChatWindow(item);
+            };
+
+            conn.onmessage = function (evt) {
+                let messages = evt.data.split('\n');
+                console.log(messages)
+                for (let i = 0; i < messages.length; i++) {
+                    let item = document.createElement("div");
+                    item.innerText = messages[i];
+                    appendChatWindow(item);
+                }
+            };
+
+        } else {
+            let item = document.createElement("div");
+            item.innerHTML = "<b>Websockets are not supported on this browser</b>";
+            appendChatWindow(item);
+        }
+    }
+</script>
+</body>
+</html>

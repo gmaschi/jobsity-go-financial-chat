@@ -1,0 +1,6 @@
+# IDE configuration files
+.idea
+.vscode
+
+# Vendored files
+# vendor

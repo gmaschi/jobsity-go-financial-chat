@@ -1,0 +1,13 @@
+version: 1
+
+packages:
+  - path: "./internal/services/datastore/postgresql/users/"
+    name: "usersdb"
+    engine: "postgresql"
+    schema: "./internal/services/datastore/postgresql/users/migration/"
+    queries: "./internal/services/datastore/postgresql/users/queries/"
+    emit_json_tags: true
+    emit_prepared_queries: false
+    emit_interface: true
+    emit_exact_table_names: false
+    emit_empty_slices: true
